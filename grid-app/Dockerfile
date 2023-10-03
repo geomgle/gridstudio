@@ -35,6 +35,11 @@ apt install -y \
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 apt install -y nodejs
 
+RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.18.linux* && \
+    rm go1.18.linux-amd64.tar.gz
+ENV PATH /usr/local/go/bin:${PATH}
+
 RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
 
 RUN git clone https://$GIT_TOKEN@github.com/geomgle/.dotfiles /root/.dotfiles
@@ -51,7 +56,6 @@ COPY ./terminal-server/ /home/run/terminal-server/
 # install required NPM packages for term.js
 # python3.11 makes errors: 
 #   npm config set python /usr/bin/python3.10
-
 WORKDIR /home/run/terminal-server/
 RUN npm install express-ws@5.0.2 && \
     npm install --no-cache
@@ -61,11 +65,6 @@ RUN mkdir /home/user/
 
 # set working directory to source to install go dependencies
 WORKDIR /home/source/
-
-RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.18.linux* && \
-    rm go1.18.linux-amd64.tar.gz
-ENV PATH /usr/local/go/bin:${PATH}
 
 # build manager.go once to speed up consecutive go builds
 WORKDIR /home/source/proxy/
