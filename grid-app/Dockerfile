@@ -68,8 +68,8 @@ WORKDIR /home/source/
 
 # build manager.go once to speed up consecutive go builds
 WORKDIR /home/source/proxy/
-RUN go build manager.go
-RUN rm ./manager
+RUN go install
+# RUN rm ./manager
 
 # expose ports
 EXPOSE 8080
