@@ -30,10 +30,6 @@ apt install -y \
     python3.7 \
     python3.7-distutils
 
-# copy over all files to /home/source/
-WORKDIR /home/source/
-COPY . /home/source/
-
 # install python + dependencies + nodejs
 # apt install -y python3-tk && \
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
@@ -43,7 +39,9 @@ RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-
 
 RUN git clone https://$GIT_TOKEN@github.com/geomgle/.dotfiles /root/.dotfiles
 
-# python3.7 -m pip install tensorflow
+# copy over all files to /home/source/
+WORKDIR /home/source/
+COPY . /home/source/
 
 # TODO: think about how to run terminal-server, probably multiple terminal-servers with parameters (one for each workspace)
 # create /home/run/ directory to run terminal nodejs project from
