@@ -1,5 +1,5 @@
 // Package websocketproxy is a reverse proxy for WebSocket connections.
-package websocketproxy
+package websocketproxy 
 
 import (
 	"fmt"
@@ -12,8 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"main/sessionmanager"
-
+	"proxy/sessionmanager"
 	"github.com/gorilla/websocket"
 )
 

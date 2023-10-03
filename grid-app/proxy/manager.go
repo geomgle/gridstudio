@@ -21,8 +21,8 @@ import (
 
 	"database/sql"
 
-	"main/sessionmanager"
-	"main/websocketproxy"
+	"proxy/sessionmanager"
+	"proxy/websocketproxy"
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/twinj/uuid"

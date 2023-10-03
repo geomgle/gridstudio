@@ -66,13 +66,6 @@ RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
 ENV PATH /usr/local/go/bin:${PATH}
 
 # RUN go get -d -v ./...
-# github.com/NYTimes/gziphandler (download)
-# created GOPATH=/root/go; see 'go help gopath'
-# github.com/csimplestring/go-csv (download)
-# github.com/gorilla/websocket (download)
-# github.com/skelterjohn/go.matrix (download)
-# github.com/mattn/go-sqlite3 (download)
-# github.com/twinj/uuid (download)
 
 #
 # build manager.go once to speed up consecutive go builds
