@@ -1,11 +1,13 @@
 FROM ubuntu:20.04 as base
 
+ARG GIT_TOKEN
+
 # make clear that it is a noninteractive session
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 RUN apt clean && \
 apt update && \
-apt install -y \ 
+apt install -y \
 software-properties-common \
 build-essential \
 wget \
@@ -21,15 +23,12 @@ git
 # # ENV LANGUAGE en_US:en  
 # # ENV LC_ALL en_US.UTF-8  
 
-RUN cd /tmp && \
-wget https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-tar -C /usr/local -xzf go1.14.2.linux-amd64.tar.gz
-ENV PATH /usr/local/go/bin:${PATH}
-
 # Install Python3.7 from ppa (for fast speed)
 RUN add-apt-repository ppa:deadsnakes/ppa && \
 apt update && \
-apt install -y python3.7
+apt install -y \
+    python3.7 \
+    python3.7-distutils
 
 # copy over all files to /home/source/
 WORKDIR /home/source/
@@ -40,7 +39,9 @@ COPY . /home/source/
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 apt install -y nodejs
 
-RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
+# RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
+
+RUN git clone https://$GIT_TOKEN@github.com/geomgle/.dotfiles /root/.dotfiles
 
 # python3.7 -m pip install tensorflow
 
@@ -59,16 +60,29 @@ RUN mkdir /home/user/
 # set working directory to source to install go dependencies
 WORKDIR /home/source/
 
-RUN go get -d -v ./...
+RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.18.linux* && \
+    rm go1.18.linux-amd64.tar.gz
+ENV PATH /usr/local/go/bin:${PATH}
 
+# RUN go get -d -v ./...
+# github.com/NYTimes/gziphandler (download)
+# created GOPATH=/root/go; see 'go help gopath'
+# github.com/csimplestring/go-csv (download)
+# github.com/gorilla/websocket (download)
+# github.com/skelterjohn/go.matrix (download)
+# github.com/mattn/go-sqlite3 (download)
+# github.com/twinj/uuid (download)
+
+#
 # build manager.go once to speed up consecutive go builds
-WORKDIR /home/source/proxy/
-RUN go build manager.go
-RUN rm ./manager
-
-# expose ports
-EXPOSE 8080
-
-WORKDIR /home/source/proxy/
-
-CMD ["bash","run-manager-proxy.sh"]
+# WORKDIR /home/source/proxy/
+# RUN go build manager.go
+# RUN rm ./manager
+#
+# # expose ports
+# EXPOSE 8080
+#
+# WORKDIR /home/source/proxy/
+#
+# CMD ["bash","run-manager-proxy.sh"]

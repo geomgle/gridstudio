@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"../sessionmanager"
+	"main/sessionmanager"
 
 	"github.com/gorilla/websocket"
 )
