@@ -6,15 +6,15 @@ ARG GIT_TOKEN
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 RUN apt clean && \
-apt update && \
-apt install -y \
-software-properties-common \
-build-essential \
-wget \
-python3-pip \
-locales \
-curl \
-git
+    apt update && \
+    apt install -y \
+        software-properties-common \
+        build-essential \
+        wget \
+        python3-pip \
+        locales \
+        curl \
+        git
 
 # # TODO: see if any locale issues arise
 # # RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
@@ -39,7 +39,7 @@ COPY . /home/source/
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 apt install -y nodejs
 
-# RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
+RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
 
 RUN git clone https://$GIT_TOKEN@github.com/geomgle/.dotfiles /root/.dotfiles
 
@@ -51,8 +51,12 @@ RUN mkdir /home/run/
 COPY ./terminal-server/ /home/run/terminal-server/
 
 # install required NPM packages for term.js
+# python3.11 makes errors: 
+#   npm config set python /usr/bin/python3.10
+
 WORKDIR /home/run/terminal-server/
-RUN npm install --no-cache
+RUN npm install express-ws@5.0.2 && \
+    npm install --no-cache
 
 # create work directory
 RUN mkdir /home/user/
@@ -65,17 +69,14 @@ RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
     rm go1.18.linux-amd64.tar.gz
 ENV PATH /usr/local/go/bin:${PATH}
 
-# RUN go get -d -v ./...
-
-#
 # build manager.go once to speed up consecutive go builds
-# WORKDIR /home/source/proxy/
-# RUN go build manager.go
-# RUN rm ./manager
-#
-# # expose ports
-# EXPOSE 8080
-#
-# WORKDIR /home/source/proxy/
-#
-# CMD ["bash","run-manager-proxy.sh"]
+WORKDIR /home/source/proxy/
+RUN go build manager.go
+RUN rm ./manager
+
+# expose ports
+EXPOSE 8080
+
+WORKDIR /home/source/proxy/
+
+CMD ["bash","run-manager-proxy.sh"]
