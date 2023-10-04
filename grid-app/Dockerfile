@@ -1,4 +1,5 @@
-FROM ubuntu:20.04 as base
+FROM ubuntu:latest as base
+# FROM ubuntu:20.04 as base
 
 ARG GIT_TOKEN
 
@@ -24,24 +25,40 @@ RUN apt clean && \
 # # ENV LC_ALL en_US.UTF-8  
 
 # Install Python3.7 from ppa (for fast speed)
-RUN add-apt-repository ppa:deadsnakes/ppa && \
-apt update && \
-apt install -y \
-    python3.7 \
-    python3.7-distutils
+# RUN add-apt-repository ppa:deadsnakes/ppa && \
+# apt update && \
+# apt install -y \
+#     python3.7 \
+#     python3.7-distutils
+# RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
+
+RUN apt install -y \
+      python3.10 
+RUN python3.10 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
 
 # install python + dependencies + nodejs
 # apt install -y python3-tk && \
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-apt install -y nodejs
+# RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+# apt install -y nodejs
 
+# Install nvm with node and npm
+ENV NVM_DIR /root/.nvm
+ENV NODE_VERSION 10.24.1
+RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.39.5/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+ENV NODE_PATH $NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
+ENV PATH      $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+# install go
 RUN wget https://go.dev/dl/go1.18.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.18.linux* && \
     rm go1.18.linux-amd64.tar.gz
 ENV PATH /usr/local/go/bin:${PATH}
 
-RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
-
+# install .dotfiles
 RUN git clone https://$GIT_TOKEN@github.com/geomgle/.dotfiles /root/.dotfiles
 
 # copy over all files to /home/source/
@@ -57,8 +74,8 @@ COPY ./terminal-server/ /home/run/terminal-server/
 # python3.11 makes errors: 
 #   npm config set python /usr/bin/python3.10
 WORKDIR /home/run/terminal-server/
-RUN npm install express-ws@5.0.2 && \
-    npm install --no-cache
+# RUN npm install express-ws@5.0.2 && \
+RUN npm install --no-cache
 
 # create work directory
 RUN mkdir /home/user/
