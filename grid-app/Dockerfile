@@ -1,5 +1,4 @@
 FROM ubuntu:latest as base
-# FROM ubuntu:20.04 as base
 
 ARG GIT_TOKEN
 
@@ -24,22 +23,9 @@ RUN apt clean && \
 # # ENV LANGUAGE en_US:en  
 # # ENV LC_ALL en_US.UTF-8  
 
-# Install Python3.7 from ppa (for fast speed)
-# RUN add-apt-repository ppa:deadsnakes/ppa && \
-# apt update && \
-# apt install -y \
-#     python3.7 \
-#     python3.7-distutils
-# RUN python3.7 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
-
 RUN apt install -y \
       python3.10 
 RUN python3.10 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit-learn
-
-# install python + dependencies + nodejs
-# apt install -y python3-tk && \
-# RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-# apt install -y nodejs
 
 # Install nvm with node and npm
 ENV NVM_DIR /root/.nvm
@@ -74,7 +60,6 @@ COPY ./terminal-server/ /home/run/terminal-server/
 # python3.11 makes errors: 
 #   npm config set python /usr/bin/python3.10
 WORKDIR /home/run/terminal-server/
-# RUN npm install express-ws@5.0.2 && \
 RUN npm install --no-cache
 
 # create work directory
