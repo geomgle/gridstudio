@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-PYTHON_COMMAND = "python3.10"
-
 func streamPythonEOut(stdoutPipe io.ReadCloser, pythonIn io.WriteCloser, c *Client, closeChannel chan string) {
 	buffer := make([]byte, 100, 1000)
 
@@ -239,7 +237,7 @@ func parsePythonOutput(bufferHolder bytes.Buffer, pythonIn io.WriteCloser, c *Cl
 func (c *Client) pythonInterpreter() {
 
 	/// PYTHON COMMUNICATION SPAWNING PROTOCOL
-	pythonCommand := PYTHON_COMMAND
+	pythonCommand := "python3.10"
 
 	if runtime.GOOS == "windows" {
 		// in Windows runtime Python 3 doesn't use 3 in the name of the executable
