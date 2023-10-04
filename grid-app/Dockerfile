@@ -65,6 +65,7 @@ RUN mkdir /home/user/
 
 # set working directory to source to install go dependencies
 WORKDIR /home/source/
+RUN go install
 
 # build manager.go once to speed up consecutive go builds
 WORKDIR /home/source/proxy/
