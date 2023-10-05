@@ -27,6 +27,14 @@ document.addEventListener("keydown", function (event) {
           terminalTextarea.focus();
         }
         break;
+      // Ctrl + y: copy selected cells to python code
+      case 89:
+        event.preventDefault();
+        var selection = app.cellArrayToStringRange(
+          app.getSelectedCellsInOrder(),
+        );
+        app.codeGen.generate("pandas-get-data", selection, app.activeSheet);
+        break;
       default:
         break;
     }
