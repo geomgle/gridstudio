@@ -150,6 +150,9 @@ def has_number(s):
 
 
 def convert_to_json_string(element):
+    # if element is None:
+    #     return 0
+
     if isinstance(element, str):
         # string meant as string, escape
         element = element.replace("\n", "")
