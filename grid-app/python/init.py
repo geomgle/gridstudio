@@ -291,7 +291,8 @@ def getAndExecuteInputOnce():
     command_buffer = ""
 
     while True:
-        code_input = input("")
+        if code_input is None:
+            code_input = input("")
 
         # when empty line is found, execute code
         if code_input == "":
@@ -330,5 +331,10 @@ def getAndExecuteInput():
 # sheet("A1:A2", [1,2])
 # df = pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
 # sheet("A1:B2")
+
+from db.session import session
+from dotenv import load_dotenv
+
+load_dotenv()
 
 getAndExecuteInput()

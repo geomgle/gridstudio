@@ -126,8 +126,7 @@
             } else if (json[0] == "JUMPCELL") {
               if (_this.app.callbacks.jumpCellCallback) {
                 var cellReference = json[3];
-                var cell = _this.app.referenceToZeroIndexedArray(cellReference);
-                _this.app.callbacks.jumpCellCallback(cell);
+                _this.app.callbacks.jumpCellCallback(cellReference);
               }
             } else if (json[0] == "MAXCOLUMNWIDTH") {
               var rowIndex = parseInt(json[1]) - 1;

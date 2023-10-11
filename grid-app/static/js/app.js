@@ -1,3 +1,5 @@
+// app.js send to server(in grid.go) with _this.wsManager.send({arguments: ...})
+// function
 (function () {
   // macOS swipe back prevention
   history.pushState(null, null, "");
@@ -109,6 +111,7 @@
       [0, 0],
     ];
     this.selectedCellsPerSheet = [];
+    this.leftCell, this.rightCell, this.topCell, this.bottomCell;
 
     this.cutCopyPasteSelection;
 
@@ -1394,17 +1397,16 @@
           }
         } else if ((e.ctrlKey || e.metaKey) && e.keyCode == 65) {
           if (!_this.isFocusedOnElement()) {
-            // select all cells
-            _this.selectedCells = [
-              [0, 0],
-              [
-                _this.sheetSizes[_this.activeSheet][0] - 1,
-                _this.sheetSizes[_this.activeSheet][1] - 1,
-              ],
-            ];
+            var currentCell = _this.selectedCells[0];
+            var cell = _this.cellZeroIndexToString(
+              currentCell[0],
+              currentCell[1],
+            );
 
-            // update draw
-            _this.drawSheet();
+            _this.findFirstTypeCellPromise(cell, "all").then((range) => {
+              _this.selectedCells = range;
+              _this.drawSheet();
+            });
           } else {
             keyRegistered = false;
           }
@@ -1641,45 +1643,17 @@
       this.wsManager.send({
         arguments: ["JUMPCELL", startCell, direction, "" + this.activeSheet],
       });
+    };
 
-      // var currentCell = startCell;
-
-      // // check for row (row_or_column = 0), check for column (row_or_column = 1)
-      // while(true){
-      // 	currentCell[row_or_column] += direction; // decrements cell in case of direction -1
-
-      // 	if(type == 'nonempty'){
-
-      // 		if(this.get(currentCell) != undefined && this.get(currentCell) != ''){
-      // 			break;
-      // 		}
-      // 		else if(this.get(currentCell) == undefined){
-      // 			// undo last step to get to existent cell
-      // 			currentCell[row_or_column] -= direction;
-      // 			break;
-      // 		}
-
-      // 	}else if(type == 'empty'){
-
-      // 		if(this.get(currentCell) === undefined){
-
-      // 			// undo last step to get to existent cell
-      // 			currentCell[row_or_column] -= direction;
-      // 			break;
-      // 		}
-      // 		if(this.get(currentCell) == ''){
-
-      // 			// undo last step to get to existent cell
-      // 			currentCell[row_or_column] -= direction;
-      // 			break;
-      // 		}
-
-      // 	}else{
-      // 		break;
-      // 	}
-      // }
-
-      // return currentCell;
+    this.findFirstTypeCellPromise = function (startCell, direction) {
+      return new Promise((resolve, reject) => {
+        this.findFirstTypeCell(startCell, direction, function (cellReference) {
+          var cells = cellReference.split(" ").map(function (cell) {
+            return _this.referenceToZeroIndexedArray(cell);
+          });
+          resolve(cells);
+        });
+      });
     };
 
     this.translateSelection = function (dx, dy, shift, ctrl) {
@@ -1734,7 +1708,8 @@
         this.findFirstTypeCell(
           this.cellZeroIndexToString(cell[0], cell[1]),
           direction,
-          function (cell) {
+          function (cellReference) {
+            var cell = _this.referenceToZeroIndexedArray(cellReference);
             _this.selectedCells[1] = cell;
 
             // set back to global
@@ -3139,7 +3114,7 @@
     if (width < maxWidth) {
       return str;
     } else {
-      var ellipsis = "…";
+      var ellipsis = "���";
       var ellipsisWidth = c.measureText(ellipsis).width;
       var len = 1;
       var newString = str;

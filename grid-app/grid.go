@@ -1,6 +1,7 @@
 package main
 
 import (
+    "math"
 	"bytes"
 	"encoding/csv"
 	"encoding/gob"
@@ -67,8 +68,8 @@ func gridInstance(c *Client) {
 
 	var grid Grid
 
-	defaultColumnCount := 15
-	defaultRowCount := 100
+	defaultColumnCount := 20
+	defaultRowCount := 10000
 
 	// if Grid serialized file exists try to load that
 	sheetFile := c.hub.rootDirectory + "sheetdata/sheet.serialized"
@@ -125,7 +126,7 @@ func gridInstance(c *Client) {
 
 	sendSheets(c, &grid)
 
-	grid.PythonResultChannel = make(chan string, 256)
+	grid.PythonResultChannel = make(chan string, 512)
 	grid.PythonClient = c.commands
 
 	c.grid = &grid
@@ -2185,82 +2186,212 @@ func findMaxColumnWidth(columnIndex int, sheetIndex int8, grid *Grid, c *Client)
 	c.send <- json
 
 }
+
 func findJumpCell(startCell Reference, direction string, grid *Grid, c *Client) {
+    // define all four directions
+    directions := map[string][]int{
+        "up":    []int{-1, 0},
+        "down":  []int{1, 0},
+        "left":  []int{0, -1},
+        "right": []int{0, 1},
+    }
 
-	// find jump cell based on startCell
-	startCellRow := getReferenceRowIndex(startCell.String)
-	startCellColumn := getReferenceColumnIndex(startCell.String)
+    // Initialize min and max variables for pos_x and pos_y
+    minX, minY := math.MaxInt32, math.MaxInt32
+    maxX, maxY := math.MinInt32, math.MinInt32
 
-	// check whether cell is empty
-	startCellEmpty := isCellEmpty(getDataFromRef(startCell, grid))
+    // if direction is "all", iterate over all directions
+    isFromAll := false
+    if direction == "all" {
+        isFromAll = true
+        for dir, increments := range directions {
+            currentCellRow, currentCellColumn := processDirection(dir, increments, startCell, isFromAll, grid, c)
 
-	horizontalIncrement := 0
-	verticalIncrement := 0
+            // Update min and max positions
+            if currentCellRow < minX {
+                minX = currentCellRow
+            }
+            if currentCellRow > maxX {
+                maxX = currentCellRow
+            }
+            if currentCellColumn < minY {
+                minY = currentCellColumn
+            }
+            if currentCellColumn > maxY {
+                maxY = currentCellColumn
+            }
+        }
 
-	if direction == "up" {
-		verticalIncrement = -1
-	} else if direction == "down" {
-		verticalIncrement = 1
-	} else if direction == "left" {
-		horizontalIncrement = -1
-	} else if direction == "right" {
-		horizontalIncrement = 1
-	}
+        // Prepare JSON data
+        data := indexesToReferenceString(minX, minY)+" "+indexesToReferenceString(maxX, maxY)
+        // dataJson, err := json.Marshal(data)
+        // if err != nil {
+        //     fmt.Println(err)
+        //     return
+        // }
+        //
+        // dataJsonString := string(dataJson)
+        jsonData := []string{"JUMPCELL", relativeReferenceString(startCell), direction, data}
 
-	currentCellRow := startCellRow
-	currentCellColumn := startCellColumn
+        json, err := json.Marshal(jsonData)
 
-	isFirstCellCheck := true
+        if err != nil {
+            fmt.Println(err)
+        }
 
-	for {
-		currentCellRow += verticalIncrement
-		currentCellColumn += horizontalIncrement
+        c.send <- json
 
-		if currentCellRow > grid.SheetSizes[grid.ActiveSheet].RowCount || currentCellRow < 1 {
-			break
-		}
-		if currentCellColumn > grid.SheetSizes[grid.ActiveSheet].ColumnCount || currentCellColumn < 1 {
-			break
-		}
-
-		thisCellEmpty := isCellEmpty(getDataFromRef(Reference{String: indexesToReferenceString(currentCellRow, currentCellColumn), SheetIndex: startCell.SheetIndex}, grid))
-
-		if isFirstCellCheck && thisCellEmpty && !startCellEmpty {
-			// if first cell check is empty cell and this cell is non-empty find first non-empty cell
-			startCellEmpty = !startCellEmpty
-		}
-
-		if !startCellEmpty && thisCellEmpty {
-
-			break
-		}
-		if startCellEmpty && !thisCellEmpty {
-
-			currentCellRow += verticalIncrement
-			currentCellColumn += horizontalIncrement
-
-			break
-		}
-
-		isFirstCellCheck = false
-	}
-
-	// reverse one step
-	currentCellRow -= verticalIncrement
-	currentCellColumn -= horizontalIncrement
-
-	newCell := indexesToReferenceString(currentCellRow, currentCellColumn)
-
-	jsonData := []string{"JUMPCELL", relativeReferenceString(startCell), direction, newCell}
-
-	json, err := json.Marshal(jsonData)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	c.send <- json
+    } else {
+        processDirection(direction, directions[direction], startCell, isFromAll, grid, c)
+    }
 }
+
+func processDirection(direction string, increments []int, startCell Reference, isFromAll bool, grid *Grid, c *Client) (int, int) {
+    // get vertical and horizontal increments
+    verticalIncrement := increments[0]
+    horizontalIncrement := increments[1]
+
+    // find jump cell based on startCell
+    startCellRow := getReferenceRowIndex(startCell.String)
+    startCellColumn := getReferenceColumnIndex(startCell.String)
+
+    // check whether cell is empty
+    startCellEmpty := isCellEmpty(getDataFromRef(startCell, grid))
+
+    currentCellRow := startCellRow
+    currentCellColumn := startCellColumn
+
+    isFirstCellCheck := true
+
+    for {
+        currentCellRow += verticalIncrement
+        currentCellColumn += horizontalIncrement
+
+        if currentCellRow > grid.SheetSizes[grid.ActiveSheet].RowCount || currentCellRow < 1 {
+            break
+        }
+        if currentCellColumn > grid.SheetSizes[grid.ActiveSheet].ColumnCount || currentCellColumn < 1 {
+            break
+        }
+
+        thisCellEmpty := isCellEmpty(getDataFromRef(Reference{String: indexesToReferenceString(currentCellRow, currentCellColumn), SheetIndex: startCell.SheetIndex}, grid))
+
+        if !isFromAll && isFirstCellCheck && thisCellEmpty && !startCellEmpty {
+            // if first cell check is empty cell and this cell is non-empty find first non-empty cell
+            startCellEmpty = !startCellEmpty
+        }
+
+        if !startCellEmpty && thisCellEmpty {
+            break
+        }
+        if startCellEmpty && !thisCellEmpty {
+            currentCellRow += verticalIncrement
+            currentCellColumn += horizontalIncrement
+            break
+        }
+
+        isFirstCellCheck = false
+    }
+
+    // reverse one step
+    currentCellRow -= verticalIncrement
+    currentCellColumn -= horizontalIncrement
+
+    if !isFromAll {
+        newCell := indexesToReferenceString(currentCellRow, currentCellColumn)
+
+        // prepare JSON data
+        jsonData := []string{"JUMPCELL", relativeReferenceString(startCell), direction, newCell}
+
+        // marshal JSON and send
+        json, err := json.Marshal(jsonData)
+
+        if err != nil {
+            fmt.Println(err)
+        }
+
+        c.send <- json
+    }
+
+    return currentCellRow, currentCellColumn
+}
+
+// func findJumpCell(startCell Reference, direction string, grid *Grid, c *Client) {
+//
+// 	// find jump cell based on startCell
+// 	startCellRow := getReferenceRowIndex(startCell.String)
+// 	startCellColumn := getReferenceColumnIndex(startCell.String)
+//
+// 	// check whether cell is empty
+// 	startCellEmpty := isCellEmpty(getDataFromRef(startCell, grid))
+//
+// 	horizontalIncrement := 0
+// 	verticalIncrement := 0
+//
+// 	if direction == "up" {
+// 		verticalIncrement = -1
+// 	} else if direction == "down" {
+// 		verticalIncrement = 1
+// 	} else if direction == "left" {
+// 		horizontalIncrement = -1
+// 	} else if direction == "right" {
+// 		horizontalIncrement = 1
+// 	}
+//
+// 	currentCellRow := startCellRow
+// 	currentCellColumn := startCellColumn
+//
+// 	isFirstCellCheck := true
+//
+// 	for {
+// 		currentCellRow += verticalIncrement
+// 		currentCellColumn += horizontalIncrement
+//
+// 		if currentCellRow > grid.SheetSizes[grid.ActiveSheet].RowCount || currentCellRow < 1 {
+// 			break
+// 		}
+// 		if currentCellColumn > grid.SheetSizes[grid.ActiveSheet].ColumnCount || currentCellColumn < 1 {
+// 			break
+// 		}
+//
+// 		thisCellEmpty := isCellEmpty(getDataFromRef(Reference{String: indexesToReferenceString(currentCellRow, currentCellColumn), SheetIndex: startCell.SheetIndex}, grid))
+//
+// 		if isFirstCellCheck && thisCellEmpty && !startCellEmpty {
+// 			// if first cell check is empty cell and this cell is non-empty find first non-empty cell
+// 			startCellEmpty = !startCellEmpty
+// 		}
+//
+// 		if !startCellEmpty && thisCellEmpty {
+//
+// 			break
+// 		}
+// 		if startCellEmpty && !thisCellEmpty {
+//
+// 			currentCellRow += verticalIncrement
+// 			currentCellColumn += horizontalIncrement
+//
+// 			break
+// 		}
+//
+// 		isFirstCellCheck = false
+// 	}
+//
+// 	// reverse one step
+// 	currentCellRow -= verticalIncrement
+// 	currentCellColumn -= horizontalIncrement
+//
+// 	newCell := indexesToReferenceString(currentCellRow, currentCellColumn)
+//
+// 	jsonData := []string{"JUMPCELL", relativeReferenceString(startCell), direction, newCell}
+//
+// 	json, err := json.Marshal(jsonData)
+//
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+//
+// 	c.send <- json
+// }
 
 func getIntFromString(intString string) int {
 	intValue, err := strconv.Atoi(intString)
