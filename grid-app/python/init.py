@@ -263,6 +263,7 @@ def sheet(cell_range, data=None, headers=False, sheet_index=0):
 
     # get data from sheet
     else:
+        print(headers)
         if ":00" in cell_range:
             real_print(
                 "#DATA#" + str(sheet_index) + "!" + cell_range + "#ENDPARSE#",
@@ -284,19 +285,27 @@ def sheet(cell_range, data=None, headers=False, sheet_index=0):
             )
             getAndExecuteInputOnce()
 
-        print(sheet_data)
         # if everything works, the exec command has filled sheet_data with the appropriate data
         # return data range as arrays
         column_references = cell_range_to_indexes(cell_range)
 
         result = []
+        colnames = []
         for column in column_references:
+            if headers:
+                reference = column.pop(0)
+                colnames.append(sheet_data[str(sheet_index) + "!" + reference])
+
             column_data = []
             for reference in column:
                 column_data.append(sheet_data[str(sheet_index) + "!" + reference])
             result.append(column_data)
 
-        return pd.DataFrame(data=result).transpose()
+        df = pd.DataFrame(data=result).transpose()
+        if headers:
+            df.columns = colnames
+
+        return df
 
 
 def getAndExecuteInputOnce():
@@ -345,12 +354,34 @@ def getAndExecuteInput():
 
 from db.session import session
 from dotenv import load_dotenv
+from sqlalchemy.dialects.postgresql import insert
+from db.declarations import Email
 
 load_dotenv()
 
-res = pd.read_sql("mail", session.bind, columns=["spam", "origin", "msg"])
-res["msg"] = res["msg"].str[:190]
-sheet("A1", res)
+res = pd.read_sql("mail", session.bind, columns=["uid", "spam", "origin", "msg"])
+res["msg"] = res["msg"].str.slice(0, 10)
+sheet("A1", res, headers=True)
+sheet("B2:B5", [1, 2, 3, 4])
+sheet("F5:F5", "Hello")
+r = sheet("A1:00", headers=True)
+print(r.head())
+r_dict = r.to_dict("records")
+# print(r)
+# print(type(r_dict))
+#
+# stmt = insert(Email.__table__).values(r_dict)
+# stmt = stmt.on_conflict_do_update(
+#     constraint="PK-mail-uid",
+#     set_=dict(spam=stmt.excluded.spam),
+#     # set_={col: getattr(stmt.excluded, col) for col in res_dict[0].keys()},
+# )
+# session.execute(stmt)
+# session.commit()
+# print("Success")
+# except Exception as e:
+#     session.rollback()
+#     print(e)
 # print(sheet_data["0!A1"])
 # df = sheet("A1:00")
 # print(df)
