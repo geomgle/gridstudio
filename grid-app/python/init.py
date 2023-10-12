@@ -23,6 +23,7 @@ if os.path.isdir("/home/user"):
     os.chdir("/home/user")
 
 sheet_data = {}
+received_range = ""
 
 real_print = print
 
@@ -262,17 +263,28 @@ def sheet(cell_range, data=None, headers=False, sheet_index=0):
 
     # get data from sheet
     else:
-        # convert non-range to range for get operation
-        if ":" not in cell_range:
-            cell_range = ":".join([cell_range, cell_range])
+        if ":00" in cell_range:
+            real_print(
+                "#DATA#" + str(sheet_index) + "!" + cell_range + "#ENDPARSE#",
+                end="",
+                flush=True,
+            )
+            getAndExecuteInputOnce()
+            cell_range = received_range
+        else:
+            # convert non-range to range for get operation
+            if ":" not in cell_range:
+                cell_range = ":".join([cell_range, cell_range])
 
-        # in blocking fashion get latest data of range from Go
-        real_print(
-            "#DATA#" + str(sheet_index) + "!" + cell_range + "#ENDPARSE#",
-            end="",
-            flush=True,
-        )
-        getAndExecuteInputOnce()
+            # in blocking fashion get latest data of range from Go
+            real_print(
+                "#DATA#" + str(sheet_index) + "!" + cell_range + "#ENDPARSE#",
+                end="",
+                flush=True,
+            )
+            getAndExecuteInputOnce()
+
+        print(sheet_data)
         # if everything works, the exec command has filled sheet_data with the appropriate data
         # return data range as arrays
         column_references = cell_range_to_indexes(cell_range)
@@ -291,8 +303,7 @@ def getAndExecuteInputOnce():
     command_buffer = ""
 
     while True:
-        if code_input is None:
-            code_input = input("")
+        code_input = input("")
 
         # when empty line is found, execute code
         if code_input == "":
@@ -337,4 +348,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+res = pd.read_sql("mail", session.bind, columns=["spam", "origin", "msg"])
+res["msg"] = res["msg"].str[:190]
+sheet("A1", res)
+# print(sheet_data["0!A1"])
+# df = sheet("A1:00")
+# print(df)
 getAndExecuteInput()

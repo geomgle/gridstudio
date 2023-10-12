@@ -116,6 +116,7 @@ func runTests() {
 		testString(someReferences[0], "'0'!A5")
 		testString(someReferences[1], "'Blad 2'!A10")
 		testString(someReferences[2], "A10")
+        testString(someReferences[2], "A10:00")
 		testString(someReferences[3], "Blad15!$A$100")
 
 		fmt.Println(strconv.Itoa(testCount-testFailCount) + "/" + strconv.Itoa(testCount) + " tests succeeded. Failed: " + strconv.Itoa(testFailCount))

@@ -111,7 +111,6 @@
       [0, 0],
     ];
     this.selectedCellsPerSheet = [];
-    this.leftCell, this.rightCell, this.topCell, this.bottomCell;
 
     this.cutCopyPasteSelection;
 
@@ -1648,7 +1647,7 @@
     this.findFirstTypeCellPromise = function (startCell, direction) {
       return new Promise((resolve, reject) => {
         this.findFirstTypeCell(startCell, direction, function (cellReference) {
-          var cells = cellReference.split(" ").map(function (cell) {
+          var cells = cellReference.split(":").map(function (cell) {
             return _this.referenceToZeroIndexedArray(cell);
           });
           resolve(cells);
@@ -3114,7 +3113,7 @@
     if (width < maxWidth) {
       return str;
     } else {
-      var ellipsis = "���";
+      var ellipsis = "...";
       var ellipsisWidth = c.measureText(ellipsis).width;
       var len = 1;
       var newString = str;

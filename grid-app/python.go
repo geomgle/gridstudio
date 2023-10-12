@@ -181,16 +181,22 @@ func parsePythonOutput(bufferHolder bytes.Buffer, pythonIn io.WriteCloser, c *Cl
 					c.grid.PythonResultChannel <- commands[0]
 
 				} else if len(newString) > 5 && newString[:6] == "#DATA#" {
-
 					// data receive request
 					cellRangeString := newString[6:]
 
-					cells := cellRangeToCells(getReferenceRangeFromMapIndex(cellRangeString))
+                    refRange := getReferenceRangeFromMapIndex(cellRangeString)
+                    if strings.HasSuffix(refRange.String, ":00") {
+                        refRange.String = refRange.String[:len(refRange.String)-3]
+                        refRange.String = findJumpCell(Reference{String: refRange.String, SheetIndex: refRange.SheetIndex}, "all", true, c.grid, c)
+					    var rangeBuf bytes.Buffer
+                        rangeBuf.WriteString("received_range=\""+refRange.String+"\"\n")
+                        pythonIn.Write(rangeBuf.Bytes())
+                    }
+                    cells := cellRangeToCells(refRange)
 
 					var commandBuf bytes.Buffer
 
 					for _, e := range cells {
-
 						valueDv := getDataFromRef(e, c.grid)
 						value := convertToString(valueDv).DataString
 						// for each cell get data
