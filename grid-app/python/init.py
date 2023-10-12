@@ -22,6 +22,15 @@ if os.path.isdir("/home/user"):
     sys.path.append("/home/user")
     os.chdir("/home/user")
 
+from sqlalchemy.dialects.postgresql import insert
+
+from db.session import session
+from dotenv import load_dotenv
+from db.declarations import Email
+
+load_dotenv()
+
+
 sheet_data = {}
 received_range = ""
 
@@ -182,7 +191,7 @@ def df_to_list(df, include_headers=True):
     return (data, column_length, len(columns))
 
 
-def sheet(cell_range, data=None, headers=False, sheet_index=0):
+def sheet(cell_range, data=None, headers=True, sheet_index=0):
     # input data into sheet
     if data is not None:
         # convert numpy to array
@@ -263,7 +272,6 @@ def sheet(cell_range, data=None, headers=False, sheet_index=0):
 
     # get data from sheet
     else:
-        print(headers)
         if ":00" in cell_range:
             real_print(
                 "#DATA#" + str(sheet_index) + "!" + cell_range + "#ENDPARSE#",
@@ -347,42 +355,68 @@ def getAndExecuteInput():
             command_buffer += code_input + "\n"
 
 
+def from_sql(
+    cell_range,
+    query,
+    columns=None,
+    headers=True,
+    sheet_index=0,
+):
+    df = None
+    if columns is None:
+        df = pd.read_sql(query, session.bind)
+    else:
+        df = pd.read_sql(query, session.bind, columns=columns)
+    df = df.where(pd.notnull(df), None)
+    df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
+    row_count = len(df.index)
+
+    sheet(cell_range, df, headers, sheet_index)
+
+    print("Affected rows: " + str(row_count))
+    return row_count
+
+
+def to_sql(
+    cell_range,
+    declared_object,
+    update_columns=None,
+    on_conflict_do_update=True,
+    headers=True,
+    sheet_index=0,
+):
+    if ":" not in cell_range:
+        cell_range = ":".join([cell_range, "00"])
+
+    df = sheet(cell_range, headers=headers, sheet_index=sheet_index)
+    df_records = df.to_dict("records")
+
+    table = declared_object.__table__
+    stmt = insert(table).values(df_records)
+    stmt = stmt.on_conflict_do_update(
+        constraint=f"PK-{table}-uid",
+        set_={
+            col: getattr(stmt.excluded, col)
+            for col in df_records[0].keys()
+            if not update_columns or col in update_columns
+        },
+    )
+    try:
+        result = session.execute(stmt)
+        session.commit()
+
+        affected_rows = result.rowcount
+        print("Affected rows: " + str(affected_rows))
+
+        return affected_rows
+    except Exception as e:
+        session.rollback()
+        traceback.print_exc()
+
+
 # testing
 # sheet("A1:A2", [1,2])
 # df = pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
 # sheet("A1:B2")
 
-from db.session import session
-from dotenv import load_dotenv
-from sqlalchemy.dialects.postgresql import insert
-from db.declarations import Email
-
-load_dotenv()
-
-res = pd.read_sql("mail", session.bind, columns=["uid", "spam", "origin", "msg"])
-res["msg"] = res["msg"].str.slice(0, 10)
-sheet("A1", res, headers=True)
-sheet("B2:B5", [1, 2, 3, 4])
-sheet("F5:F5", "Hello")
-r = sheet("A1:00", headers=True)
-print(r.head())
-r_dict = r.to_dict("records")
-# print(r)
-# print(type(r_dict))
-#
-# stmt = insert(Email.__table__).values(r_dict)
-# stmt = stmt.on_conflict_do_update(
-#     constraint="PK-mail-uid",
-#     set_=dict(spam=stmt.excluded.spam),
-#     # set_={col: getattr(stmt.excluded, col) for col in res_dict[0].keys()},
-# )
-# session.execute(stmt)
-# session.commit()
-# print("Success")
-# except Exception as e:
-#     session.rollback()
-#     print(e)
-# print(sheet_data["0!A1"])
-# df = sheet("A1:00")
-# print(df)
 getAndExecuteInput()
