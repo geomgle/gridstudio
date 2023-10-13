@@ -80,6 +80,4 @@ EXPOSE 8080
 
 WORKDIR /home/source/proxy/
 
-CMD ["bash","run-manager-proxy.sh", "&"]
-CMD ["/sbin/init"]
-# CMD ["bash","run-manager-proxy.sh"]
+CMD ["bash","run-manager-proxy.sh"]

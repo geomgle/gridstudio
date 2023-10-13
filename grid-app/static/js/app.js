@@ -120,6 +120,7 @@
     this.data = [];
     this.dataFormulas = [];
 
+    this.maxColumnWidth = 600;
     this.rowHeightsCache = [];
     this.columnWidthsCache = [];
 
@@ -2038,6 +2039,10 @@
     };
 
     this.columnWidths = function (index, value) {
+      if (value > this.maxColumnWidth) {
+        this.maxColumnWidth = value;
+      }
+
       if (value === undefined) {
         if (this.columnWidthsCache[index] === undefined) {
           return this.cellWidth;
