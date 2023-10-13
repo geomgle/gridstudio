@@ -2,7 +2,7 @@ html,
 body {
   margin: 0;
   height: 100%;
-  font-family: "Arial", sans-serif;
+  font-family: monospace, sans-serif;
   font-size: 14px;
   overflow: hidden;
 }
@@ -131,7 +131,7 @@ body div-sheet canvas {
   float: left;
   width: 20px;
   height: 20px;
-  background: url('image/icon-arrow.svg');
+  background: url("image/icon-arrow.svg");
   background-size: contain;
   cursor: pointer;
 }
@@ -239,7 +239,7 @@ body div-sheet canvas {
   right: 5px;
   top: 10px;
   opacity: 0.3;
-  background-image: url('image/icon-arrow.svg');
+  background-image: url("image/icon-arrow.svg");
   background-size: contain;
   background-repeat: no-repeat;
 }
@@ -278,7 +278,7 @@ body div-sheet canvas {
   z-index: 9;
   right: 0;
   bottom: 0;
-  background: url('image/resize.png');
+  background: url("image/resize.png");
   background-position: 66.6% 66.6%;
   background-size: 10px 10px;
   background-repeat: no-repeat;
@@ -446,7 +446,7 @@ body div-sheet canvas {
   height: 100%;
 }
 .code-editor .dev-tabs .terminal {
-  background: #000;
+  background: #eee;
   padding: 5px;
 }
 .code-editor .dev-tabs .tabs {
@@ -482,7 +482,7 @@ body div-sheet canvas {
 }
 .code-editor .dev-tabs .console .message:before {
   position: absolute;
-  content: '# ';
+  content: "# ";
   color: #999;
   margin-left: -13px;
 }

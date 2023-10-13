@@ -703,12 +703,15 @@ func main() {
 
 			// create WorkspaceSession
 			ws.GoCmd = exec.Command("/bin/sh", "-c", "go run *.go -addr=:"+strconv.Itoa(ws.Port)+" -root=/home/userdata/workspace-"+uuidString+"/")
-			ws.GoCmd.Dir = "/home/source/"
+            ws.GoCmd.Dir = "/home/dev/gridstudio/grid-app/"
+			// ws.GoCmd.Dir = "/home/source/"
 			ws.GoCmd.Stdout = outfile
 			ws.GoCmd.Stderr = outfile
 
 			ws.NodeCmd = exec.Command("node", "app.js", strconv.Itoa(ws.TermPort), "/home/userdata/workspace-"+uuidString+"/")
-			ws.NodeCmd.Dir = "/home/run/terminal-server/"
+
+			ws.NodeCmd.Dir = "/home/dev/gridstudio/grid-app/terminal-server/"
+			// ws.NodeCmd.Dir = "/home/run/terminal-server/"
 			ws.NodeCmd.Stdout = outfile
 			ws.NodeCmd.Stderr = outfile
 

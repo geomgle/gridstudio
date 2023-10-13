@@ -31,7 +31,7 @@ RUN python3.10 -m pip install --upgrade pip numpy pandas matplotlib scipy scikit
 
 # Install nvm with node and npm
 ENV NVM_DIR /root/.nvm
-ENV NODE_VERSION 10.24.1
+ENV NODE_VERSION 16.20.2
 RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.39.5/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
     && nvm install $NODE_VERSION \

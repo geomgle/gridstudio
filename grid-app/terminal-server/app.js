@@ -19,6 +19,7 @@ app.use(function(req, res, next) {
 app.use('/build', express.static(__dirname + '/xterm.js/'));
 
 app.get('/', function(req, res){
+    console.log(__dirname)
   res.sendFile(__dirname + '/index.html');
 });
 

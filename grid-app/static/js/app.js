@@ -2039,10 +2039,6 @@
     };
 
     this.columnWidths = function (index, value) {
-      if (value > this.maxColumnWidth) {
-        this.maxColumnWidth = value;
-      }
-
       if (value === undefined) {
         if (this.columnWidthsCache[index] === undefined) {
           return this.cellWidth;
@@ -2050,6 +2046,9 @@
           return this.columnWidthsCache[index];
         }
       } else {
+        if (value > this.maxColumnWidth) {
+          value = this.maxColumnWidth;
+        }
         this.columnWidthsCache[index] = value;
       }
     };
