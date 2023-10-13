@@ -1,8 +1,4 @@
-import warnings
-
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-
+import os
 import json
 import traceback
 import re
@@ -14,21 +10,27 @@ import numpy as np
 matplotlib.use("Agg")
 
 import base64
-import os
+import dateutil
 import numbers
 import matplotlib.pyplot as plt
+
+from sqlalchemy.dialects.postgresql import insert
+from dotenv import load_dotenv
+
+import warnings
+
+warnings.filterwarnings("ignore", message="numpy.dtype size changed")
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 if os.path.isdir("/home/user"):
     sys.path.append("/home/user")
     os.chdir("/home/user")
 
-from sqlalchemy.dialects.postgresql import insert
+load_dotenv()
 
 from db.session import session
-from dotenv import load_dotenv
 from db.declarations import Email
-
-load_dotenv()
+from utils.table_io import get_whole_table
 
 
 sheet_data = {}
@@ -355,32 +357,88 @@ def getAndExecuteInput():
             command_buffer += code_input + "\n"
 
 
-def from_sql(
-    cell_range,
-    query,
-    columns=None,
-    headers=True,
-    sheet_index=0,
-):
-    df = None
-    if columns is None:
-        df = pd.read_sql(query, session.bind)
-    else:
-        df = pd.read_sql(query, session.bind, columns=columns)
-    df = df.where(pd.notnull(df), None)
-    df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
-    row_count = len(df.index)
+def excel_date_to_datetime(xl_date):
+    date_str = pd.to_datetime(xl_date, format="%Y-%m-%d", errors="coerce").strftime(
+        "%Y-%m-%d"
+    )
 
+    return date_str
+
+
+def read_table_exec(source, *args, **kwargs):
+    if "date_columns" in kwargs:
+        converters = {col: excel_date_to_datetime for col in kwargs.pop("date_columns")}
+        res = get_whole_table(
+            source,
+            sheet_name=0,
+            header=0,
+            na_filter=False,
+            converters=converters,
+            *args,
+            **kwargs,
+        )
+        return res
+    else:
+        return get_whole_table(
+            source,
+            sheet_name=0,
+            header=0,
+            na_filter=False,
+            *args,
+            **kwargs,
+        )
+
+
+def read_db_exec(source, *args, **kwargs):
+    return pd.read_sql(source, session.bind, *args, **kwargs)
+
+
+def get(cell_range, source, columns=None, headers=True, sheet_index=0, *args, **kwargs):
+    exec = None
+    if "/" in source:
+        exec = read_table_exec
+    else:
+        exec = read_db_exec
+
+    df = None
+    # if source is file or directory, exec is get_whole_table, else exec is pd.read_sql
+    if columns is None:
+        df = exec(source, *args, **kwargs)
+    else:
+        df = exec(source, columns=columns, *args, **kwargs)
+
+    # df = df.where(pd.notnull(df), None)
+    df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
+
+    row_count = len(df.index)
     sheet(cell_range, df, headers, sheet_index)
 
-    print("Affected rows: " + str(row_count))
-    return row_count
+
+# def from_sql(
+#     cell_range,
+#     query,
+#     columns=None,
+#     headers=True,
+#     sheet_index=0,
+# ):
+#     df = None
+#     if columns is None:
+#         df = pd.read_sql(query, session.bind)
+#     else:
+#         df = pd.read_sql(query, session.bind, columns=columns)
+#     df = df.where(pd.notnull(df), None)
+#     df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
+#     row_count = len(df.index)
+#
+#     sheet(cell_range, df, headers, sheet_index)
+#
+#     return row_count
 
 
-def to_sql(
+def put(
     cell_range,
     declared_object,
-    update_columns=None,
+    columns=None,
     on_conflict_do_update=True,
     headers=True,
     sheet_index=0,
@@ -398,7 +456,7 @@ def to_sql(
         set_={
             col: getattr(stmt.excluded, col)
             for col in df_records[0].keys()
-            if not update_columns or col in update_columns
+            if not columns or col in columns
         },
     )
     try:
@@ -418,5 +476,9 @@ def to_sql(
 # sheet("A1:A2", [1,2])
 # df = pd.DataFrame({'a':[1,2,3], 'b':[4,5,6]})
 # sheet("A1:B2")
+# from("A1", "/home/Dropbox/seolos/labor.xlsx", date_columns=["입사일", "퇴사일", "생년월일"])
+get("A1", "mail", columns=["uid", "spam", "origin", "msg"])
+# df = sheet("A1:00")
+
 
 getAndExecuteInput()
