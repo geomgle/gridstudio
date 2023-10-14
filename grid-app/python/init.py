@@ -162,10 +162,9 @@ def has_number(s):
 
 
 def convert_to_json_string(element):
-    # if element is None:
-    #     return 0
-
-    if isinstance(element, str):
+    if element is None:
+        return 0
+    elif isinstance(element, str):
         # string meant as string, escape
         element = element.replace("\n", "")
 
@@ -410,29 +409,9 @@ def get(cell_range, source, columns=None, headers=True, sheet_index=0, *args, **
     # df = df.where(pd.notnull(df), None)
     df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
 
-    row_count = len(df.index)
     sheet(cell_range, df, headers, sheet_index)
 
-
-# def from_sql(
-#     cell_range,
-#     query,
-#     columns=None,
-#     headers=True,
-#     sheet_index=0,
-# ):
-#     df = None
-#     if columns is None:
-#         df = pd.read_sql(query, session.bind)
-#     else:
-#         df = pd.read_sql(query, session.bind, columns=columns)
-#     df = df.where(pd.notnull(df), None)
-#     df = df.map(lambda x: x[:190] if isinstance(x, str) else x)
-#     row_count = len(df.index)
-#
-#     sheet(cell_range, df, headers, sheet_index)
-#
-#     return row_count
+    return df
 
 
 def put(
