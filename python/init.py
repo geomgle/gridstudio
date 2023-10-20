@@ -22,9 +22,9 @@ import warnings
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-if os.path.isdir("/home/user"):
-    sys.path.append("/home/user")
-    os.chdir("/home/user")
+if os.path.isdir("/home/dev/gridstudio/python"):
+    sys.path.append("/home/dev/gridstudio/python")
+    os.chdir("/home/dev/gridstudio/python")
 
 load_dotenv()
 

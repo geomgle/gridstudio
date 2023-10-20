@@ -45,9 +45,7 @@ Terminal.applyAddon(winptyCompat);
         scrollback: 1000,
         tabStopWidth: 8,
         allowTransparency: true,
-        theme: {
-          background: "#fdf6e3",
-        },
+        theme: null,
       });
       this.term = term;
 
