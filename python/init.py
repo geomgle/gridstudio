@@ -21,11 +21,10 @@ data_layout = {}
 
 
 def excel_date_to_datetime(xl_date):
-    date_str = pd.to_datetime(xl_date, format="%Y-%m-%d", errors="coerce").strftime(
-        "%Y-%m-%d"
-    )
+    date = pd.to_datetime(xl_date, format="%Y-%m-%d", errors="coerce")
+    print(date)
 
-    return date_str
+    return date.strftime("%Y-%m-%d")
 
 
 def read_table_exec(source, *args, **kwargs):
@@ -141,10 +140,11 @@ def getAndExecuteInput():
 # sheet("A1:B2")
 # from("A1", "/home/Dropbox/seolos/labor.xlsx", date_columns=["입사일", "퇴사일", "생년월일"])
 # get("A1", "mail", columns=["uid", "spam", "origin", "msg"])
-a = T("/home/Dropbox/seolos/labor.xlsx", date_columns=["입사일", "퇴사일", "생년월일"])
-b = T(Email, columns=["uid", "spam", "origin", "msg"])
+a = T("/home/Dropbox/seolos/l.xlsx")
 a.to("A1")
-b.to("A25")
+
+# b = T(Email, columns=["uid", "spam", "origin", "msg"])
+# b.to("A25")
 # print(type(Email))
 # sheet("A1", type("Email", (Base,), {}), columns=["uid", "spam", "origin", "msg"])
 # df = sheet("A1:00")
