@@ -79,15 +79,14 @@ func gridInstance(c *Client) {
 		columnCount := defaultColumnCount
 		rowCount := defaultRowCount
 
-		sheetSizes := []SheetSize{SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}}
+		sheetSizes := []SheetSize{SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}}
 
 		// For now make this a two way mapping for ordered loops and O(1) access times -- aware of redundancy of state which could cause problems
 		sheetNames := make(map[string]int8)
 		sheetNames["Sheet1"] = 0
 		sheetNames["Sheet2"] = 1
-		sheetNames["Sheet3"] = 2
 
-		sheetList := []string{"Sheet1", "Sheet2", "Sheet3"}
+		sheetList := []string{"Sheet1", "Sheet2"}
 
 		grid = Grid{Data: make(map[string]*DynamicValue), PerformanceCounting: make(map[string]int), DirtyCells: make(map[string]bool), ActiveSheet: 0, SheetNames: sheetNames, SheetList: sheetList, SheetSizes: sheetSizes}
 
@@ -350,6 +349,13 @@ func gridInstance(c *Client) {
 				jsonData := []string{"TESTCALLBACK-PONG"}
 				json, _ := json.Marshal(jsonData)
 				c.send <- json
+
+			case "RENAMESHEET":
+
+                sheetIndex := getIndexFromString(parsed[1])
+                newName := parsed[2]
+                renameSheet(sheetIndex, newName, &grid)
+                sendSheets(c, &grid)
 
 			case "REMOVESHEET":
 
@@ -1775,6 +1781,11 @@ func removeSheet(sheetIndex int8, grid *Grid) {
 		grid.SheetNames[sheetName] = int8(index)
 		index++
 	}
+}
+
+func renameSheet(sheetIndex int8, newName string, grid *Grid) {
+    grid.SheetList[sheetIndex] = newName
+    grid.SheetNames[newName] = sheetIndex
 }
 
 func sourceToDestinationMapping(sourceRange ReferenceRange, destinationRange ReferenceRange, grid *Grid) ([]Reference, []Reference, []Reference) {

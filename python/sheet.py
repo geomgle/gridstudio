@@ -197,6 +197,18 @@ def df_to_list(df, include_headers=True):
     return (data, column_length, len(columns))
 
 
+def add_sheet(name=None):
+    data = {"arguments": ["ADDSHEET", name]}
+    data = "".join(["#PARSE#", json.dumps(data), "#ENDPARSE#"])
+    real_print(data, flush=True, end="")
+
+
+def rename_sheet(sheet_index, name):
+    data = {"arguments": ["RENAMESHEET", str(sheet_index), name]}
+    data = "".join(["#PARSE#", json.dumps(data), "#ENDPARSE#"])
+    real_print(data, flush=True, end="")
+
+
 def sheet(cell_range, data=None, headers=True, sheet_index=0):
     # input data into sheet
     if data is not None:

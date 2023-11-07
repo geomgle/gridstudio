@@ -864,7 +864,6 @@
           alert("You can't remove the last sheet.");
           return;
         }
-
         var remove = confirm(
           "Are you sure you want to remove sheet: " + $(this).text() + "?",
         );
@@ -872,6 +871,16 @@
         if (remove) {
           _this.wsManager.send({ arguments: ["REMOVESHEET", tabIndex + ""] });
         }
+
+        // var rename = prompt("Enter a new sheet name");
+        //
+        // if (rename.length != 0) {
+        //   _this.wsManager.send({
+        //     arguments: ["RENAMESHEET", tabIndex + "", rename],
+        //   });
+        // } else {
+        //   alert("You have to enter a sheet name, aborting.");
+        // }
       });
     };
 

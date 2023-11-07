@@ -14,7 +14,7 @@ if os.path.isdir("/home/dev/gridstudio/python"):
 from db.session import session
 from db.declarations import Email, Base
 from utils.table_io import get_whole_table
-from sheet import sheet, real_print
+from sheet import sheet, add_sheet, rename_sheet, real_print
 from utils.table import T
 
 data_layout = {}
