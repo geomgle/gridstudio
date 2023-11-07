@@ -68,7 +68,7 @@ func gridInstance(c *Client) {
 
 	var grid Grid
 
-	defaultColumnCount := 20
+	defaultColumnCount := 26
 	defaultRowCount := 10000
 
 	// if Grid serialized file exists try to load that
@@ -79,14 +79,15 @@ func gridInstance(c *Client) {
 		columnCount := defaultColumnCount
 		rowCount := defaultRowCount
 
-		sheetSizes := []SheetSize{SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}}
+		sheetSizes := []SheetSize{SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}, SheetSize{RowCount: rowCount, ColumnCount: columnCount}}
 
 		// For now make this a two way mapping for ordered loops and O(1) access times -- aware of redundancy of state which could cause problems
 		sheetNames := make(map[string]int8)
 		sheetNames["Sheet1"] = 0
 		sheetNames["Sheet2"] = 1
+		sheetNames["Sheet3"] = 2
 
-		sheetList := []string{"Sheet1", "Sheet2"}
+		sheetList := []string{"Sheet1", "Sheet2", "Sheet3"}
 
 		grid = Grid{Data: make(map[string]*DynamicValue), PerformanceCounting: make(map[string]int), DirtyCells: make(map[string]bool), ActiveSheet: 0, SheetNames: sheetNames, SheetList: sheetList, SheetSizes: sheetSizes}
 
